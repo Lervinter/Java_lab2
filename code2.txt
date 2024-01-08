@@ -1,0 +1,213 @@
+import java.util.ArrayList;
+import java.util.List;
+
+abstract class Item {
+    private String title;
+    private String uniqueID;
+    private boolean isBorrowed;
+
+    public Item(String title, String uniqueID) {
+        this.title = title;
+        this.uniqueID = uniqueID;
+        this.isBorrowed = false;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public String getUniqueID() {
+        return uniqueID;
+    }
+
+    public boolean isBorrowed() {
+        return isBorrowed;
+    }
+
+    public void setBorrowed(boolean borrowed) {
+        isBorrowed = borrowed;
+    }
+
+    public abstract void borrowItem();
+
+    public abstract void returnItem();
+
+    @Override
+    public String toString() {
+        return "Title: " + title + "\nUnique ID: " + uniqueID + "\nBorrowed: " + isBorrowed + "\n";
+    }
+}
+
+class Book extends Item {
+    private String author;
+
+    public Book(String title, String uniqueID, String author) {
+        super(title, uniqueID);
+        this.author = author;
+    }
+
+    @Override
+    public void borrowItem() {
+        setBorrowed(true);
+    }
+
+    @Override
+    public void returnItem() {
+        setBorrowed(false);
+    }
+}
+
+class DVD extends Item {
+    private int duration;
+
+    public DVD(String title, String uniqueID, int duration) {
+        super(title, uniqueID);
+        this.duration = duration;
+    }
+
+    @Override
+    public void borrowItem() {
+        setBorrowed(true);
+    }
+
+    @Override
+    public void returnItem() {
+        setBorrowed(false);
+    }
+}
+
+class Patron {
+    private String name;
+    private String ID;
+    private List<Item> borrowedItems;
+
+    public Patron(String name, String ID) {
+        this.name = name;
+        this.ID = ID;
+        this.borrowedItems = new ArrayList<>();
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getID() {
+        return ID;
+    }
+
+    public List<Item> getBorrowedItems() {
+        return borrowedItems;
+    }
+
+    public void borrow(Item item) {
+        borrowedItems.add(item);
+    }
+
+    public void returnItem(Item item) {
+        borrowedItems.remove(item);
+    }
+}
+
+interface IManageable {
+    void add(Item item);
+
+    void remove(Item item);
+
+    void listAvailable();
+
+    void listBorrowed();
+}
+
+class Library implements IManageable {
+    private List<Item> items;
+    private List<Patron> patrons;
+
+    public Library() {
+        this.items = new ArrayList<>();
+        this.patrons = new ArrayList<>();
+    }
+
+    @Override
+    public void add(Item item) {
+        items.add(item);
+    }
+
+    @Override
+    public void remove(Item item) {
+        items.remove(item);
+    }
+
+    @Override
+    public void listAvailable() {
+        System.out.println("Available Items:");
+        for (Item item : items) {
+            if (!item.isBorrowed()) {
+                System.out.println(item);
+            }
+        }
+    }
+
+    @Override
+    public void listBorrowed() {
+        System.out.println("Borrowed Items:");
+        for (Item item : items) {
+            if (item.isBorrowed()) {
+                System.out.println(item);
+            }
+        }
+    }
+
+    public void registerPatron(Patron patron) {
+        patrons.add(patron);
+    }
+
+    public void lendItem(Patron patron, Item item) {
+        if (!item.isBorrowed()) {
+            patron.borrow(item);
+            item.borrowItem();
+            System.out.println("Item lent successfully.");
+        } else {
+            System.out.println("Item is already borrowed.");
+        }
+    }
+
+    public void returnItem(Patron patron, Item item) {
+        if (patron.getBorrowedItems().contains(item)) {
+            patron.returnItem(item);
+            item.returnItem();
+            System.out.println("Item returned successfully.");
+        } else {
+            System.out.println("Patron did not borrow this item.");
+        }
+    }
+
+    public static void main(String[] args) {
+        Library library = new Library();
+
+        Book book1 = new Book("Introduction to Java", "B001", "John Doe");
+        DVD dvd1 = new DVD("Java Basics", "D001", 120);
+
+        library.add(book1);
+        library.add(dvd1);
+
+        Patron patron1 = new Patron("Alice", "P001");
+        Patron patron2 = new Patron("Bob", "P002");
+
+        library.registerPatron(patron1);
+        library.registerPatron(patron2);
+
+        library.lendItem(patron1, book1);
+        library.lendItem(patron2, dvd1);
+
+        System.out.println("Before Return:");
+        library.listAvailable();
+        library.listBorrowed();
+
+        library.returnItem(patron1, book1);
+        library.returnItem(patron2, dvd1);
+
+        System.out.println("After Return:");
+        library.listAvailable();
+        library.listBorrowed();
+    }
+}
